@@ -1,3 +1,7 @@
+2025-03-15  Khem Raj <raj.khem@gmail.com>
+
+	* acinclude.m4: Add parameter names to function prototype.
+
 2025-02-01  Marc Glisse <marc.glisse@inria.fr>
 
 	* longlong.h (loongarch64 umul_ppmm): __int128__ -> __int128.
