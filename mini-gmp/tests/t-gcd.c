@@ -156,7 +156,7 @@ test_one (const mpz_t a, const mpz_t b)
 	  bp = sp; bn = sn;
 	}
 
-      tp = malloc ((an + bn) * sizeof (mp_limb_t));
+      tp = (mp_ptr) malloc ((an + bn) * sizeof (mp_limb_t));
       if (!tp)
 	abort ();
 
