@@ -1,3 +1,11 @@
+2025-06-19  Niels Möller  <nisse@lysator.liu.se>
+
+	* tests/t-gcd.c (test_one): Fix memory leak.
+
+2020-06-18  Torbjörn Granlund  <tg@gmplib.org>
+
+	* tests/t-gcd.c (test_one): Add cast for malloc result.
+
 2024-10-18  Niels Möller  <nisse@lysator.liu.se>
 
 	* mini-gmp.c (mpn_gcd): New function.

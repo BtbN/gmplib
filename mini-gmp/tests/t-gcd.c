@@ -172,6 +172,7 @@ test_one (const mpz_t a, const mpz_t b)
 	  dump ("ref", s);
 	  abort ();
 	}
+      free (tp);
     }
 
   mpz_clear (g);
