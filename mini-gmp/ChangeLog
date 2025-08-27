@@ -1,3 +1,9 @@
+2025-08-27  Niels Möller  <nisse@lysator.liu.se>
+
+	* mini-gmp.c (mpz_import): Return early when count == 0, to avoid
+	undefined behavior with pointer arithmetic, if the corresponding
+	src pointer is NULL. Reported by Bruno Haible.
+
 2025-06-19  Niels Möller  <nisse@lysator.liu.se>
 
 	* tests/t-gcd.c (test_one): Fix memory leak.
