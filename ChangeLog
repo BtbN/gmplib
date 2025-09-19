@@ -1,3 +1,7 @@
+2025-09-19  Marc Glisse <marc.glisse@inria.fr>
+
+	* acinclude.m4 (alloca array): Remove broken test.
+
 2025-03-15  Khem Raj <raj.khem@gmail.com>
 
 	* acinclude.m4: Add parameter names to function prototype.

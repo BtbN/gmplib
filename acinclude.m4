@@ -564,23 +564,6 @@ param_init ()
 }
 ])
 
-# __builtin_alloca is not available everywhere, check it exists before
-# seeing that it works
-GMP_PROG_CC_WORKS_PART_TEST([$1],[__builtin_alloca availability],
-[int k; int foo () { __builtin_alloca (k); }],
-  [GMP_PROG_CC_WORKS_PART([$1], [alloca array],
-[/* The following provokes an internal compiler error from Itanium HP-UX cc
-    under +O2 or higher.  We use this sort of code in mpn/generic/mul_fft.c. */
-int k;
-int foo ()
-{
-  int i, **a;
-  a = __builtin_alloca (k);
-  for (i = 0; i <= k; i++)
-    a[i] = __builtin_alloca (1 << i);
-}
-])])
-
 GMP_PROG_CC_WORKS_PART([$1], [abs int -> double conversion],
 [/* The following provokes an internal error from the assembler on
    power2-ibm-aix4.3.1.0.  gcc -mrios2 compiles to nabs+fcirz, and this
