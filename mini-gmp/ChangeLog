@@ -1,3 +1,13 @@
+2025-09-24  Niels Möller  <nisse@lysator.liu.se>
+
+	* mini-gmp.c (MINI_GMP_ENABLE_FLOAT): New knob, to disable
+	floating point functions, default to 1. Replaces
+	MINI_GMP_DONT_USE_FLOAT_H.
+	(mpz_set_d, mpz_init_set_d, mpz_get_d, mpz_cmpabs_d, mpz_cmp_d):
+	Make conditional on MINI_GMP_ENABLE_FLOAT.
+	* mini-mpq.c (MINI_GMP_ENABLE_FLOAT): Analogous change.
+	(mpq_set_d, mpq_get_d): Make conditional on MINI_GMP_ENABLE_FLOAT.
+
 2025-08-27  Niels Möller  <nisse@lysator.liu.se>
 
 	* mini-gmp.c (mpz_import): Return early when count == 0, to avoid

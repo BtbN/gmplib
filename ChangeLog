@@ -1,3 +1,8 @@
+2025-09-24  Niels Möller  <nisse@lysator.liu.se>
+
+	* bootstrap.c (MINI_GMP_ENABLE_FLOAT): Define to 0. Replaces...
+	(MINI_GMP_DONT_USE_FLOAT_H): Deleted.
+
 2025-09-19  Marc Glisse <marc.glisse@inria.fr>
 
 	* acinclude.m4 (alloca array): Remove broken test.
