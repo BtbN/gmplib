@@ -48,7 +48,7 @@ isprime (unsigned long n)
 }
 
 void
-check_one (mpz_srcptr n, int want)
+check_one (mpz_srcptr n, int want, char a)
 {
   int  got;
 
@@ -57,7 +57,7 @@ check_one (mpz_srcptr n, int want)
   /* "definitely prime" (2) is fine if we only wanted "probably prime" (1) */
   if ((got != want) && (got != want * 2))
     {
-      printf ("mpz_probab_prime_p\n");
+      printf ("mpz_probab_prime_p (%c)\n", a);
       mpz_trace ("  n    ", n);
       printf    ("  got =%d", got);
       printf    ("  want=%d", want);
@@ -68,9 +68,9 @@ check_one (mpz_srcptr n, int want)
 void
 check_pn (mpz_ptr n, int want)
 {
-  check_one (n, want);
+  check_one (n, want, '+');
   mpz_neg (n, n);
-  check_one (n, want);
+  check_one (n, want, '-');
 }
 
 /* expect certainty for small n */
@@ -120,7 +120,7 @@ check_composites (int count)
   for (i = 0; composites[i]; i++)
     {
       mpz_set_str_or_abort (n, composites[i], 0);
-      check_one (n, 0);
+      check_one (n, 0, 'c');
     }
 
   for (i = 0; i < count; i++)
@@ -178,7 +178,7 @@ check_primes (void)
   for (i = 0; primes[i]; i++)
     {
       mpz_set_str_or_abort (n, primes[i], 0);
-      check_one (n, 1);
+      check_one (n, 1, 'p');
     }
   mpz_clear (n);
 }
@@ -209,7 +209,7 @@ check_fermat_mersenne (int count)
 	    want = 2;
 	    break;
 	  }
-      check_one (pp, want);
+      check_one (pp, want, 'f');
 
       mpz_sub_ui (pp, pp, 2); /* 2^i - 1 */
       want = 0;
@@ -219,7 +219,7 @@ check_fermat_mersenne (int count)
 	    want = 1 << (i < 50);
 	    break;
 	  }
-      check_one (pp, want);
+      check_one (pp, want, 'm');
     }
   mpz_clear (pp);
 }
