@@ -22,6 +22,9 @@ the GNU MP Library test suite.  If not, see https://www.gnu.org/licenses/.  */
 #include "gmp-impl.h"
 #include "tests.h"
 
+#ifndef GMP_ENABLE_PROTH_TEST
+#define GMP_ENABLE_PROTH_TEST 1
+#endif
 
 /* Enhancements:
 
@@ -87,6 +90,48 @@ check_small (void)
       mpz_set_si (n, i);
       check_pn (n, isprime (i));
     }
+
+  mpz_clear (n);
+}
+
+void
+check_proth_fixed ()
+{
+  static const struct {
+    char*        k;
+    mp_bitcnt_t  n;
+    int       want;
+  } data [] = {
+    {"18975", 16, 1}, /* prime, b=61 */
+    {"642497427", 34, 1}, /* prime, b=107 */
+    {"430341165", 32, 0}, /* composite, b=113 */
+    {"3432101253", 32, 1}, /* prime, b=113 */
+    {"67067655", 64, 1}, /* prime, b=103 */
+    {"117377265", 64, 0}, /* composite, b=113 */
+    {"4654135305", 63, 1}, /* prime, b=107 */
+    {"3836987091", 63, 0}, /* composite, b=131 */
+    {"11838137235", 63, 1}, /* prime, b=109 */
+    {"6269603373", 64, 0}, /* composite, b=137 */
+    {"1300166691", 67, 1}, /* prime, b=113 */
+    {"11257223805", 65, 0}, /* composite, b=151 */
+    {"71459624811", 63, 1}, /* prime, b=137 */
+    {"59242853985", 64, 0}, /* composite, b=157 */
+    {"25739539989", 65, 1}, /* prime, b=139 */
+    {"59242853985", 65, 0}, /* composite, b=179 */
+    {"6148401", 103, 0}, /* composite, b=101 */
+    {"69646689", 101, 1}, /* prime, b=97 */
+  };
+  mpz_t n;
+  mpz_init (n);
+
+  for (int i = 0; i < numberof (data); ++i) {
+    mpz_set_str (n, data[i].k, 10);
+    mpz_mul_2exp (n, n, data[i].n);
+    int want = data[i].want << GMP_ENABLE_PROTH_TEST;
+    mpz_add_ui (n, n, 1);
+
+    check_one (n, want, 'h');
+  }
 
   mpz_clear (n);
 }
@@ -247,6 +292,7 @@ main (int argc, char **argv)
   check_fermat_mersenne (count >> 3);
   check_composites (count);
   check_primes ();
+  check_proth_fixed ();
 
   tests_end ();
   exit (0);
