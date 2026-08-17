@@ -57,6 +57,10 @@ see https://www.gnu.org/licenses/.  */
 #define GMP_BPSW_NOFALSEPOSITIVES_UPTO_64BITS 0
 #endif
 
+#ifndef GMP_ENABLE_PROTH_TEST
+#define GMP_ENABLE_PROTH_TEST 1
+#endif
+
 static int
 mod_eq_m1 (mpz_srcptr x, mpz_srcptr m)
 {
@@ -117,19 +121,65 @@ int
 mpz_millerrabin (mpz_srcptr n, int reps)
 {
   mpz_t nm, x, y, q;
-  mp_bitcnt_t k;
+  mp_bitcnt_t k, l;
   int is_prime;
   TMP_DECL;
-  TMP_MARK;
 
   ASSERT (SIZ (n) > 0);
+  ASSERT ((SIZ (n) > 1) || (*PTR(n) > 3));
+
+  /* Find q and k, where q is odd and n = 1 + 2**k * q.  */
+  k = mpn_scan1 (PTR (n), 1);
+
+  if (GMP_ENABLE_PROTH_TEST && ((l = mpz_sizeinbase (n, 2) - k) <= k)) {
+    ASSERT (k > 1);
+    /* The number n is a Proth number: 2**k > q. */
+    /* The next search with _kronecker_ would fail with a square n,
+       we detect possible squares (of the given form) here. */
+    if (((l == k - 1) && /* (2^(k-1)+1)^2 */
+	 (mpn_scan1 (PTR (n), k + 1) == k - 1 << 1)) ||
+	((l == k - 2) && /* (2^(k-1)-1)^2 */
+	 (mpz_scan0 (n, k + 1) == k - 1 << 1)))
+      return 0; /* n is a square => it is a composite */
+
+    unsigned long b = 3;
+    do {
+      int knb = mpz_kronecker_ui (n, b);
+      if (knb <= 0) {
+	if (knb == 0) /* knb == 0, gcd(b,n) != 1. */
+	  is_prime = 0; /* Composite. */
+	else {
+	  mp_limb_t const xp[1] = {b};
+	  TMP_MARK;
+
+	  MPZ_TMP_INIT (y, SIZ (n));
+	  MPZ_TMP_INIT (q, SIZ (n));
+
+	  mpz_tdiv_q_2exp (q, n, 1);
+
+	  mpz_roinit_n (x, xp, 1);
+	  mpz_powm (y, x, q, n);
+	  /* n is prime if and only if x^{(n-1)/2} (mod n) = n - 1.
+	     In case, n is surely prime, we can return 2. */
+	  is_prime = mod_eq_m1 (y, n) << 1;
+
+	  TMP_FREE;
+	}
+
+	return is_prime;
+      }
+
+      /* k == 1, continue */
+      b += 2; /* FIXME: Loop on primes only. */
+    } while (b < MIN (ULONG_MAX, GMP_NUMB_MAX));
+  }
+
+  TMP_MARK;
 
   MPZ_TMP_INIT (x, SIZ (n) + 1);
   MPZ_TMP_INIT (y, 2 * SIZ (n)); /* mpz_powm_ui needs excessive memory!!! */
   MPZ_TMP_INIT (q, SIZ (n));
 
-  /* Find q and k, where q is odd and n = 1 + 2**k * q.  */
-  k = mpn_scan1 (PTR (n), 1);
   mpz_tdiv_q_2exp (q, n, k);
 
   /* BPSW test */
