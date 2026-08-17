@@ -1,3 +1,8 @@
+2026-08-17  Marco Bodrato <bodrato@anjara.org>
+
+	* mpz/millerrabin.c: Special (simple) test for Proth numbers.
+	* tests/mpz/t-pprime_p.c: Exercise the new test.
+
 2026-07-20  Marco Bodrato <marco.bodrato@protonmail.com>
 
 	* mpn/generic/bsqrt.c: Use a last iteration to increase precision
