@@ -137,6 +137,86 @@ check_proth_fixed ()
 }
 
 void
+check_proth (gmp_randstate_ptr rands, int count)
+{
+  /* Exponents such that k*2^n + 1 is prime, with
+     odd 2 < k < 18, and k < 2^n < 2^(2^14 + 10).
+     Sequences where recomputed, but checked with OEIS. */
+#define DATA_END 32767
+  /* 3 * 2^n + 1, OEIS A002253 */
+  static const unsigned data3[] = {
+    2, 5, 6, 8, 12, 18, 30, 36, 41, 66, 189, 201, 209, 276, 353,
+    408, 438, 534, 2208, 2816, 3168, 3189, 3912, DATA_END};
+  /* 5 * 2^n + 1, OEIS A002254 */
+  static const unsigned data5[] = {
+    3, 7, 13, 15, 25, 39, 55, 75, 85, 127, 1947,
+    3313, 4687, 5947, 13165, DATA_END};
+  /* 7 * 2^n + 1, OEIS A002255 */
+  static const unsigned data7[] = {
+    4, 6, 14, 20, 26, 50, 52, 92, 120, 174, 180, 190, 290, 320,
+    390, 432, 616, 830, 1804, 2256, 6614, 13496, 15494, DATA_END};
+  /* 9 * 2^n + 1, OEIS A002256 */
+  static const unsigned data9[] = {
+    6, 7, 11, 14, 17, 33, 42, 43, 63, 65, 67, 81, 134, 162, 206,
+    211, 366, 663, 782, 1305, 1411, 1494, 2297, 2826, 3230, 3354,
+    3417, 3690, 4842, 5802, 6937, 7967, 9431, 13903, DATA_END};
+  /* 11 * 2^n + 1, OEIS A002261 */
+  static const unsigned data11[] = {
+    5, 7, 19, 21, 43, 81, 125, 127, 209, 211, 3225,
+    4543, 10179, 15329, DATA_END};
+  /* 13 * 2^n + 1, OEIS A002257 */
+  static const unsigned data13[] = {
+    8, 10, 20, 28, 82, 188, 308, 316, 1000, DATA_END};
+  /* 15 * 2^n + 1, OEIS A002258 */
+  static const unsigned data15[] = {
+    4, 9, 10, 12, 27, 37, 38, 44, 48, 78, 112, 168, 229, 297,
+    339, 517, 522, 654, 900, 1518, 2808, 2875, 3128, 3888,
+    4410, 6804, 7050, 7392, DATA_END};
+  /* 17 * 2^n + 1, OEIS A002259 */
+  static const unsigned data17[] = {
+    15, 27, 51, 147, 243, 267, 347, 471, 747, 2163,
+    3087, 5355, 6539, 7311, DATA_END};
+  static const unsigned *data[8] = {
+    data3, data5, data7, data9, data11, data13, data15, data17
+  };
+
+  mpz_t n;
+  mpz_init (n);
+
+  unsigned bits = 10;
+  while ((count >> bits) > 2)
+    {
+      count >>= 1;
+      ++bits;
+      if (bits > 13)
+	break;
+    }
+
+  for (int i = count; i != 0; --i) {
+    unsigned long k = gmp_urandomb_ui (rands, 3); /* 0..7 */
+    const unsigned *exponents = data[k];
+    mpz_set_ui (n, 2 * k + 3); /* 3..17, odd */
+
+    unsigned shift = gmp_urandomb_ui (rands, bits) + mpz_sizeinbase (n, 2);
+    mpz_mul_2exp (n, n, shift);
+    mpz_add_ui (n, n, 1);
+
+    int want;
+    for (unsigned j = 0; ; ++j)
+      if (shift <= exponents[j])
+	{
+	  want = (shift == exponents[j]) << GMP_ENABLE_PROTH_TEST;
+	  break;
+	}
+
+    /* count -= shift >> (6 + GMP_ENABLE_PROTH_TEST); */
+    check_one (n, want, 'H');
+  }
+
+  mpz_clear (n);
+}
+
+void
 check_composites (gmp_randstate_ptr rands, int count)
 {
   int i;
@@ -294,6 +374,7 @@ main (int argc, char **argv)
   check_composites (rands, count);
   check_primes ();
   check_proth_fixed ();
+  check_proth (rands, count);
 
   tests_end ();
   exit (0);
