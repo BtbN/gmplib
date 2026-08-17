@@ -19,8 +19,8 @@
    CERTAIN TO BE SUBJECT TO INCOMPATIBLE CHANGES OR DISAPPEAR COMPLETELY IN
    FUTURE GNU MP RELEASES.
 
-Copyright 1991, 1993, 1994, 1996-2002, 2005, 2014, 2018-2022, 2024 Free
-Software Foundation, Inc.
+Copyright 1991, 1993, 1994, 1996-2002, 2005, 2014, 2018-2022, 2024,
+2026 Free Software Foundation, Inc.
 
 Contributed by John Amanatides.
 Changed to "BPSW, then Miller Rabin if required" by Marco Bodrato.
