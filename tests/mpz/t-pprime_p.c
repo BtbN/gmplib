@@ -137,12 +137,11 @@ check_proth_fixed ()
 }
 
 void
-check_composites (int count)
+check_composites (gmp_randstate_ptr rands, int count)
 {
   int i;
   mpz_t a, b, n, bs;
   unsigned long size_range, size;
-  gmp_randstate_ptr rands = RANDS;
 
   mpz_init (a);
   mpz_init (b);
@@ -283,6 +282,7 @@ int
 main (int argc, char **argv)
 {
   int count = 1000;
+  gmp_randstate_ptr rands;
 
   TESTS_REPS (count, argv, argc);
 
@@ -290,7 +290,8 @@ main (int argc, char **argv)
 
   check_small ();
   check_fermat_mersenne (count >> 3);
-  check_composites (count);
+  rands = RANDS;
+  check_composites (rands, count);
   check_primes ();
   check_proth_fixed ();
 
