@@ -191,10 +191,11 @@ check_fermat_mersenne (int count)
 			       107, 127, 521, 607, 1279, 2203, 2281,
 			       3217, 4253, 4423, 9689, 9941, 11213,
 			       19937, 21701, 23209, 44497, 86243};
-  mpz_t pp;
+  mpz_t pp, sq;
   int i, j, want;
 
   mpz_init (pp);
+  mpz_init (sq);
   count = MIN (110000, count);
 
   for (i=1; i<count; ++i)
@@ -211,6 +212,10 @@ check_fermat_mersenne (int count)
 	  }
       check_one (pp, want, 'f');
 
+      mpz_mul (sq, pp, pp); /* The square is a */
+      want = 0;      /* non-prime Proth number */
+      check_one (sq, want, 's');
+
       mpz_sub_ui (pp, pp, 2); /* 2^i - 1 */
       want = 0;
       for (j = 0; j < numberof (mersenne_exponents); j++)
@@ -220,8 +225,13 @@ check_fermat_mersenne (int count)
 	    break;
 	  }
       check_one (pp, want, 'm');
+
+      mpz_mul (sq, pp, pp); /* The square is a */
+      want = 0;      /* non-prime Proth number */
+      check_one (sq, want, 'S');
     }
   mpz_clear (pp);
+  mpz_clear (sq);
 }
 
 int
