@@ -101,7 +101,7 @@ millerrabin (mpz_srcptr n, mpz_srcptr x, mpz_ptr y,
 {
   mpz_powm (y, x, q, n);
 
-  if (mpz_cmp_ui (y, 1L) == 0 || mod_eq_m1 (y, n))
+  if (((SIZ (y) == 1) & (*PTR (y) == 1)) || mod_eq_m1 (y, n))
     return 1;
 
   for (mp_bitcnt_t i = 1; i < k; ++i)
@@ -149,7 +149,7 @@ mpz_millerrabin (mpz_srcptr n, int reps)
   if (is_prime)
     {
 #if !GMP_BPSW_NOFALSEPOSITIVES_UPTO_64BITS && GMP_BPSW_BITS_MOD == 0
-      MPZ_TMP_INIT (nm, SIZ (n) + 1);
+      MPZ_TMP_INIT (nm, SIZ (n));
       mpz_tdiv_q_2exp (nm, n, 1);
 #endif
       if (
@@ -191,7 +191,7 @@ mpz_millerrabin (mpz_srcptr n, int reps)
       else
 	{
 #if GMP_BPSW_NOFALSEPOSITIVES_UPTO_64BITS || GMP_BPSW_BITS_MOD != 0
-	  MPZ_TMP_INIT (nm, SIZ (n) + 1);
+	  MPZ_TMP_INIT (nm, SIZ (n));
 	  mpz_tdiv_q_2exp (nm, n, 1);
 #endif
 	  reps -= 24;
