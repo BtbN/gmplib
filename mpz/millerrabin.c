@@ -121,24 +121,34 @@ int
 mpz_millerrabin (mpz_srcptr n, int reps)
 {
   mpz_t nm, x, y, q;
-  mp_bitcnt_t k, l;
+  mp_bitcnt_t k;
+  mp_limb_t h;
   int is_prime;
   TMP_DECL;
 
   ASSERT (SIZ (n) > 0);
-  ASSERT ((SIZ (n) > 1) || (*PTR(n) > 3));
+  h = PTR (n) [SIZ (n) - 1];
+  ASSERT ((SIZ (n) > 1) || (h > 9));
 
   /* Find q and k, where q is odd and n = 1 + 2**k * q.  */
   k = mpn_scan1 (PTR (n), 1);
 
-  if (GMP_ENABLE_PROTH_TEST && ((l = mpz_sizeinbase (n, 2) - k) <= k)) {
+  if (GMP_ENABLE_PROTH_TEST &&
+      (SIZ (n) <= (k - 1) / (GMP_NUMB_BITS >> 1) + 1) &&
+      ((SIZ (n) < (k - 1) / (GMP_NUMB_BITS >> 1) + 1) ||
+       (k % (GMP_NUMB_BITS >> 1) == 0) ||
+       !(h >> k % (GMP_NUMB_BITS >> 1) * 2))) {
+  /* if (GMP_ENABLE_PROTH_TEST && ((l = mpz_sizeinbase (n, 2) - k) <= k)) { */
     ASSERT (k > 1);
     /* The number n is a Proth number: 2**k > q. */
+
     /* The next search with _kronecker_ would fail with a square n,
-       we detect possible squares (of the given form) here. */
-    if (((l == k - 1) && /* (2^(k-1)+1)^2 */
+       we detect possible squares (of the given form, > 9) here. */
+    if (((SIZ (n) == (k - 1) / (GMP_NUMB_BITS >> 1) + 1) && /* (2^(k-1)+1)^2 */
+	 ((h >> (k - 1) % (GMP_NUMB_BITS >> 1) * 2) == CNST_LIMB (1)) &&
 	 (mpn_scan1 (PTR (n), k + 1) == k - 1 << 1)) ||
-	((l == k - 2) && /* (2^(k-1)-1)^2 */
+	((SIZ (n) == (k - 2) / (GMP_NUMB_BITS >> 1) + 1) && /* (2^(k-1)-1)^2 */
+	 ((h >> (k - 2) % (GMP_NUMB_BITS >> 1) * 2) == CNST_LIMB (3)) &&
 	 (mpz_scan0 (n, k + 1) == k - 1 << 1)))
       return 0; /* n is a square => it is a composite */
 
@@ -172,6 +182,7 @@ mpz_millerrabin (mpz_srcptr n, int reps)
       /* k == 1, continue */
       b += 2; /* FIXME: Loop on primes only. */
     } while (b < MIN (ULONG_MAX, GMP_NUMB_MAX));
+    /* FIXME: We should impose a smaller limit. */
   }
 
   TMP_MARK;
@@ -211,7 +222,7 @@ mpz_millerrabin (mpz_srcptr n, int reps)
 	  0
 #endif
 #if 64 % GMP_NUMB_BITS != 0
-	  || SIZ (n) - 64 / GMP_NUMB_BITS == (PTR (n) [64 / GMP_NUMB_BITS] < CNST_LIMB(1) << 64 % GMP_NUMB_BITS)
+	  || SIZ (n) - 64 / GMP_NUMB_BITS == (h < CNST_LIMB(1) << 64 % GMP_NUMB_BITS)
 #endif
 #else
 	  /* Consider numbers that pass the BPSW test as primes, if
@@ -221,14 +232,14 @@ mpz_millerrabin (mpz_srcptr n, int reps)
 	  SIZ (n) <= GMP_BPSW_LIMBS_LIMIT ||
 #endif
 #if GMP_BPSW_BITS_MOD != 0
-	  SIZ (n) - GMP_BPSW_LIMBS_LIMIT == (PTR (n) [GMP_BPSW_LIMBS_LIMIT] < 
+	  SIZ (n) - GMP_BPSW_LIMBS_LIMIT == (h <
 #if GMP_BPSW_BITS_MOD >=  GMP_BPSW_BITS_CONST
 					     GMP_BPSW_LIMB_CONST << (GMP_BPSW_BITS_MOD - GMP_BPSW_BITS_CONST))
 #else
 					     GMP_BPSW_LIMB_CONST >> (GMP_BPSW_BITS_CONST -  GMP_BPSW_BITS_MOD))
 #endif
 #else /* GMP_BPSW_BITS_MOD == 0 */
-	  SIZ (nm) - GMP_BPSW_LIMBS_LIMIT + 1 == (PTR (nm) [GMP_BPSW_LIMBS_LIMIT - 1] < 
+	  SIZ (nm) - GMP_BPSW_LIMBS_LIMIT + 1 == (h <
 #if GMP_NUMB_BITS > GMP_BPSW_BITS_CONST
 						  GMP_BPSW_LIMB_CONST << (GMP_NUMB_BITS - 1 - GMP_BPSW_BITS_CONST))
 #else
