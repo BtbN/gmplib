@@ -286,9 +286,7 @@ gmp_primesieve (mp_ptr bit_array, mp_limb_t n)
   bits = n_fto_bit(n);
   size = bits / GMP_LIMB_BITS + 1;
 
-  for (mp_size_t j = 0, lim = MIN (size, PRIMESIEVE_NUMBEROF_TABLE);
-       j < lim; ++j)
-    bit_array [j] = presieved [j]; /* memcopy? */
+  MPN_COPY (bit_array, presieved, MIN (size, PRIMESIEVE_NUMBEROF_TABLE));
 
   if (size > PRIMESIEVE_NUMBEROF_TABLE) {
     mp_size_t off;
