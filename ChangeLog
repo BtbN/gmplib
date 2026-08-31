@@ -3,6 +3,8 @@
 	* mpz/millerrabin.c: Special (simple) test for Proth numbers.
 	* tests/mpz/t-pprime_p.c: Exercise the new test.
 
+	* primesieve.c (gmp_primesieve): Use MPN_COPY.
+
 2026-07-20  Marco Bodrato <marco.bodrato@protonmail.com>
 
 	* mpn/generic/bsqrt.c: Use a last iteration to increase precision

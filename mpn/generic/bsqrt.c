@@ -34,7 +34,8 @@ see https://www.gnu.org/licenses/.  */
    used by mpn_bsqrtinv, i.e 3*(1 + nb / GMP_NUMB_BITS)
 
    For large enough sizes, it calls mpn_bsqrtinv for just half the
-   needed precision, the last half is computed here.
+   needed precision, the last half is computed here, using a
+   Karp–Markstein step.
 
    If T is the result of mpn_bsqrtinv, and A the input,
    R = A * T;
@@ -64,7 +65,7 @@ mpn_bsqrt (mp_ptr rp, mp_srcptr ap, mp_bitcnt_t nb, mp_ptr tp)
 	{
 	  mp_ptr sp = tp + nn;
 
-	  MPN_FILL (tp, nn, CNST_LIMB(0));
+	  MPN_FILL (tp + 1, nn - 1, CNST_LIMB(0));
 	  if (! mpn_bsqrtinv (tp, ap, nb, sp))
 	    return 0;
 
