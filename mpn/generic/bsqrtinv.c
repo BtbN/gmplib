@@ -57,27 +57,19 @@ see https://www.gnu.org/licenses/.  */
 
 #ifndef BSQRTINV_DONT_USE_TABLE
 /* Generated with GP-Pari:
-   b=8;v=Vecsmall(-binary(2^2^b-1));
-   forstep(i=1,2^(b+1),2,v[lift(Mod(i,2^(b+3))^-2)>>3+1]=i\2);
+   b=7;v=Vecsmall(-binary(2^2^b-1));
+   forstep(i=1,2^(b+1),2,v[lift(Mod(i,2^(b+3))^-2)>>3+1]=i);
    for(i=1,2^b,print1(v[i],",");if(i%16==0,print(),print1(" ")))
  */
-static const unsigned char binvsqrttab[256] = /* The least significant 1 was removed */
-  {  0, 170, 172, 102, 184, 253, 219, 129, 240, 218, 227,  22, 168,  50, 148,  46,
-    31, 245, 115,  57, 152, 157,   4, 222, 208, 197,   3, 137, 136, 146, 139, 113,
-    63, 149, 108, 217, 120,  61, 228,  62, 176, 101, 220, 214, 104, 242,  84, 238,
-    95,  53, 179, 134,  88,  34,  59,  97, 144,   5,  67,  54,  72, 173, 203,  78,
-   127,  42,  44,  25,  56, 130, 164, 254, 112,  90, 156, 105,  40,  77,  20,  81,
-   159, 138, 243, 185,  24, 226, 123,  94,  80, 186, 131, 246,   8,  18, 244, 241,
-   191, 234,  19, 166,   7, 189, 100,  65,  48, 229,  92,  86,  23, 114,  43, 110,
-   223, 181, 204,   6,  39,  93, 187, 225,  16, 133, 195,  73,  55, 210, 180,  49,
-   255,  85,  83, 153,  71,   2,  36, 126,  15,  37,  28, 233,  87, 205, 107, 209,
-   224,  10, 140, 198, 103,  98, 251,  33,  47,  58, 252, 118, 119, 109, 116, 142,
-   192, 106, 147,  38, 135, 194,  27, 193,  79, 154,  35,  41, 151,  13, 171,  17,
-   160, 202,  76, 121, 167, 221, 196, 158, 111, 250, 188, 201, 183,  82,  52, 177,
-   128, 213, 211, 230, 199, 125,  91,   1, 143, 165,  99, 150, 215, 178, 235, 174,
-    96, 117,  12,  70, 231,  29, 132, 161, 175,  69, 124,   9, 247, 237,  11,  14,
-    64,  21, 236,  89, 248,  66, 155, 190, 207,  26, 163, 169, 232, 141, 212, 145,
-    32,  74,  51, 249, 216, 162,  68,  30, 239, 122,  60, 182, 200,  45,  75, 206};
+static const unsigned char binvsqrttab[128] =
+  {   1, 171, 167, 205, 143,   5,  73, 253,  31,  75,  57,  45, 175, 101, 215,  93,
+     63,  21, 231, 115, 207, 197,   9,  67,  95, 117,   7, 237, 239, 219, 233, 227,
+    127, 213, 217,  77, 241, 123,  55, 125, 159, 203,  71,  83, 209,  27, 169,  35,
+    191, 107, 153, 243, 177,  69, 119, 195, 223,  11, 135, 109, 145, 165, 105, 157,
+    255,  85,  89,  51, 113, 251, 183,   3, 225, 181, 199, 211,  81, 155,  41, 163,
+    193, 235,  25, 141,  49,  59, 247, 189, 161, 139, 249,  19,  17,  37,  23,  29,
+    129,  43,  39, 179,  15, 133, 201, 131,  97,  53, 185, 173,  47, 229,  87, 221,
+     65, 149, 103,  13,  79, 187, 137,  61,  33, 245, 121, 147, 111,  91, 151,  99};
 #endif
 
 /* tp needs 2*(1 + bnb / GMP_NUMB_BITS) limbs of space */
@@ -88,7 +80,7 @@ mpn_bsqrtinv (mp_ptr rp, mp_srcptr yp, mp_bitcnt_t bnb, mp_ptr tp)
   ASSERT (bnb > 0);
 
 #ifndef BSQRTINV_RP_NOT_ZEROED
-  ASSERT ((bnb <= GMP_NUMB_BITS) || mpn_zero_p (rp, 1 + bnb / GMP_NUMB_BITS));
+  ASSERT ((bnb <= GMP_NUMB_BITS) || mpn_zero_p (rp + 1, bnb / GMP_NUMB_BITS));
 #endif
   if (UNLIKELY (bnb == 1))
     {
@@ -99,63 +91,49 @@ mpn_bsqrtinv (mp_ptr rp, mp_srcptr yp, mp_bitcnt_t bnb, mp_ptr tp)
     {
       mp_ptr tp2 = tp + 1 + bnb / GMP_NUMB_BITS;
       mp_size_t bn, order[GMP_LIMB_BITS + 1];
-      mp_limb_t t0, r0;
+      mp_limb_t r0;
       int i;
 
       if ((y0 & 7) != 1)
 	return 0;
 
-      /* Rekte : 4 */
-      /* 4 -4x-> 11 -4x-> 32 (ne 33, 8x) */
-      /* 4 -4x-> 11 -3x-> 21 -3x-> preter 33 (10x) [4,33]*/
-
-      /* 4 -4x-> 11 -4x-> 32 -3x-> 63 (ne 64, 11x) [3,4]*/
-      /* 4 -4x-> 11 -4x-> 32 -4x-> preter 65 (12x) */
-
-      /* 4 -3x-> 7 -3x-> 13 -3x-> 25 -4x-> preter 65 (13x) */
-      /* 4 -3x-> 7 -3x-> 13 -3x-> 25 -3x-> preter 33 (12x) */
-      /* 4 -3x-> 7 -3x-> 13 -4x-> preter 33 (10x) */
-
-      /* Tabulo: 10 */
-      /* 10 -4x-> 29 -4x-> preter 65, 8x [4,4]*/
-      /* 10 -3x-> 19 -3x-> preter 33, 6x [3,3]*/
-
 #ifdef BSQRTINV_DONT_USE_TABLE
       /* 16-bits computations are enough */
-      unsigned ru = y0 + ((y0 & 8) >> 2) + ((y0 & 16) >> 1);
+      unsigned ru = 1 + ((y0 & 8) >> 2) + ((y0 & 16) >> 1);
 
       unsigned tu = ru * ru * (unsigned) y0 >> 1;
       ASSERT ((tu & (GMP_NUMB_MAX >> (GMP_NUMB_BITS - 4))) == 0);
       ru += ru * tu * ((tu >> 1) + tu - 1); /* Halley -> 11 */
+      //      ru += ru * (tu >> 1) * (3 * tu - 2); /* Halley -> 11 */
       /* Better sequences are possible from size 11, but this
 	 code is currently not used. */
-#else /* ! defined(BSQRTINV_DONT_USE_TABLE) */
-      unsigned ru = binvsqrttab[(y0 >> 3) & 0xff];
-      ru = (ru << 1) + 1;
-#endif
       r0 = ru;
+#else /* ! defined(BSQRTINV_DONT_USE_TABLE) */
+      r0 = binvsqrttab[(y0 >> 3) & 0x7f];
+#endif
 
-#if GMP_NUMB_BITS < 10 * 2 - 2
-      const mp_bitcnt_t precomputed_bits = 10;
-#else /* GMP_NUMB_BITS >= 10 * 2 - 2 */
-      t0 = r0 * r0 * y0 >> 1;
-      ASSERT ((t0 & (GMP_NUMB_MAX >> (GMP_NUMB_BITS - 10))) == 0);
-#if GMP_NUMB_BITS < 19 * 2 - 2
-      r0 -= r0 * t0;
-      const mp_bitcnt_t precomputed_bits = 19;
-#else /* GMP_NUMB_BITS >= 19 * 2 - 2 */
-      mp_limb_t t2 = t0 * t0;
-      r0 += r0 * t0 * ((t0 >> 1) + t0 - 1 - (t2 >> 1) - (t2 << 1)); /* Halley -> 37*/
-#if GMP_NUMB_BITS < 37 * 2 - 2
-      const mp_bitcnt_t precomputed_bits = 37;
-#else /* GMP_NUMB_BITS >= 37 * 2 - 2 */
-#error Not implemented, yet.
+#if GMP_NUMB_BITS < 9 * 2 - 1
+      const mp_bitcnt_t precomputed_bits = 9;
+#else /* GMP_NUMB_BITS > 9 * 2 - 2 */
+      r0 -= r0 * (y0 * r0 * r0 >> 1); /* 9 -> 17 */
+#if GMP_NUMB_BITS < 17 * 2 - 1
+      const mp_bitcnt_t precomputed_bits = 17;
+#else /* GMP_NUMB_BITS > 17 * 2 - 2 */
+      r0 -= r0 * (y0 * r0 * r0 >> 1); /* 17 -> 33 */
+#if GMP_NUMB_BITS < 33 * 2 - 1
+      const mp_bitcnt_t precomputed_bits = 33;
+#else /* GMP_NUMB_BITS > 33 * 2 - 2 */
+      mp_bitcnt_t precomputed_bits = 33;
+      do {
+	r0 -= r0 * (y0 * r0 * r0 >> 1); /* n -> 2*n-1 */
+	precomputed_bits = precomputed_bits * 2 - 1;
+      } while ((GMP_NUMB_BITS + 3) / 2 > precomputed_bits);
 #endif
 #endif
 #endif
 
       i = 0;
-      for (; bnb > GMP_NUMB_BITS + 1; bnb = (bnb + 2) >> 1)
+      for (; bnb > GMP_NUMB_BITS + 1; bnb = (bnb >> 1) + 1)
 	order[i++] = bnb;
       if (bnb > precomputed_bits) {
 	if (bnb >= GMP_NUMB_BITS) {
@@ -172,15 +150,12 @@ mpn_bsqrtinv (mp_ptr rp, mp_srcptr yp, mp_bitcnt_t bnb, mp_ptr tp)
 	  rp[1] = 0;
 #endif
 	} else {
-	  t0 = r0 * r0 * y0 >> 1;
-	  r0 -= r0 * t0;
-	  /* r0 += r0 * t0 * ((t0 >> 1) + t0 - 1); /\* Halley, x3 - 1 *\/ */
-	  ASSERT ((t0 & (GMP_NUMB_MAX >> (GMP_NUMB_BITS - precomputed_bits))) == 0);
+	  r0 -= r0 * (y0 * r0 * r0 >> 1); /* -> GMP_NUMB_BITS - 1 */
 	}
       }
 
       if (i) {
-	mp_limb_t t4, t3, t2, t1, r1;
+	mp_limb_t t4, t3, t2, t1, t0, r1;
 
 	umul_ppmm (t1, t0, r0, r0); /* [t1,t0] <- r^2 */
 	if (bnb <= GMP_NUMB_BITS) {
@@ -196,7 +171,7 @@ mpn_bsqrtinv (mp_ptr rp, mp_srcptr yp, mp_bitcnt_t bnb, mp_ptr tp)
 	  /* r (r^2 y - 1) / 2 - r */
 	  sub_ddmmss(rp[1], rp[0], r1, t4, 0, r0);
 	} else {
-	  t0 = (t0 >> 2) | (t1 << (GMP_NUMB_BITS -2));
+	  t0 = (t0 >> 2) | (t1 << (GMP_NUMB_BITS -2)) & GMP_NUMB_MAX;
 	  t1 = (t1 >> 2); /* [t1,t0] = r0*r0 >> 2 */
 	  umul_ppmm (t3, t2, y0, t0);
 	  t3 += y0 * t1 + yp[1] * t0;
@@ -222,7 +197,15 @@ mpn_bsqrtinv (mp_ptr rp, mp_srcptr yp, mp_bitcnt_t bnb, mp_ptr tp)
 	for (bn = 2 + (bnb > GMP_NUMB_BITS); --i >= 0;)
 	  {
 	    mp_size_t pbn = bn;
-	    /* sqr may partially overwrite tp2, but that part is unused here */
+	    /* The portion of the result of sqr that overlaps with
+	       tp2, is not relevant anyway. */
+
+	    /* FIXME: Could maybe be updated:
+	       - use wraparound, low quarter known from previous
+	         iteration; or
+	       - the current r = prev_r + 2^n*d,
+	         r^2 = prev_r^2 + 2^{n+1}*prev_r*d + 2^{2n}*d^2 .
+	    */
 	    mpn_sqr (tp, rp, bn); /* tp <- r^2 */
 
 	    bnb = order[i];
