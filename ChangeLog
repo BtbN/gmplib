@@ -1,3 +1,7 @@
+2026-09-06  Nad Ka <french.cryptonad@gmail.com>
+
+	* acinclude.m4 (mpn_lshift_com): Modernize K&R declaration.
+
 2026-08-17  Marco Bodrato <bodrato@anjara.org>
 
 	* mpz/millerrabin.c: Special (simple) test for Proth numbers.

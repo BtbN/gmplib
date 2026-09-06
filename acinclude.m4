@@ -643,11 +643,7 @@ GMP_PROG_CC_WORKS_PART_MAIN([$1], [mpn_lshift_com optimization],
 
 #if ! defined (__cplusplus)
 unsigned long
-lshift_com (rp, up, n, cnt)
-  unsigned long *rp;
-  unsigned long *up;
-  long n;
-  unsigned cnt;
+lshift_com (unsigned long *rp, unsigned long *up, long n, unsigned cnt)
 {
   unsigned long retval, high_limb, low_limb;
   unsigned tnc;
@@ -694,11 +690,7 @@ GMP_PROG_CC_WORKS_PART_MAIN([$1], [mpn_lshift_com optimization 2],
 #if ! defined (__cplusplus)
 #include <stdlib.h>
 void
-lshift_com (rp, up, n, cnt)
-  unsigned long *rp;
-  unsigned long *up;
-  long n;
-  unsigned cnt;
+lshift_com (unsigned long *rp, unsigned long *up, long n, unsigned cnt)
 {
   unsigned long high_limb, low_limb;
   unsigned tnc;
