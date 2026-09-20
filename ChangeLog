@@ -1,3 +1,7 @@
+2026-09-20  Torbjörn Granlund  <tg@gmplib.org>
+
+	* mpn/x86_64/coreibwl/addmul_1.asm: Rewrite feed-in code.
+
 2026-09-06  Nad Ka <french.cryptonad@gmail.com>
 
 	* acinclude.m4 (mpn_lshift_com): Modernize K&R declaration.
@@ -122,6 +126,12 @@
 	    Marc Glisse <marc.glisse@inria.fr>
 
 	* acinclude.m4: Complete function prototype.
+
+2024-12-04  Torbjörn Granlund  <tg@gmplib.org>
+
+	* configure.ac: Choose asm paths better for Zen5.
+
+	* config.guess: Recognise Zen5 and more Apple Arm CPUs.
 
 2024-05-15 Sven Anderson <sven@anderson.de>
 
