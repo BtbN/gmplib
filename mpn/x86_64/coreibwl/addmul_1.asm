@@ -1,6 +1,6 @@
 dnl  AMD64 mpn_addmul_1 optimised for Intel Broadwell.
 
-dnl  Copyright 2015, 2017 Free Software Foundation, Inc.
+dnl  Copyright 2015, 2017, 2026 Free Software Foundation, Inc.
 
 dnl  This file is part of the GNU MP Library.
 dnl
@@ -57,12 +57,6 @@ C VIA nano	n/a
 C The loop of this code is the result of running a code generation and
 C optimisation tool suite written by David Harvey and Torbjorn Granlund.
 
-C TODO
-C  * Put an initial mulx before switching, targeting some free registers.
-C  * Tune feed-in code.
-C  * Trim nop execution after L(f2).
-C  * For DOS64, fix nop execution.
-
 define(`rp',      `%rdi')   C rcx
 define(`up',      `%rsi')   C rdx
 define(`n_param', `%rdx')   C r8
@@ -88,80 +82,73 @@ PROLOGUE(mpn_addmul_1)
 
 	mov	v0_param, %r10
 	mov	n_param, n
-	mov	R32(n_param), R32(%r8)
+	mov	R32(n_param), R32(%rax)
 	shr	$3, n
-	and	$7, R32(%r8)		C clear OF, CF as side-effect
 	mov	%r10, %rdx
-	lea	L(tab)(%rip), %r10
-ifdef(`PIC',
-`	movslq	(%r10,%r8,4), %r8
-	lea	(%r8, %r10), %r10
-	jmp	*%r10
-',`
-	jmp	*(%r10,%r8,8)
-')
-	JUMPTABSECT
-	ALIGN(8)
-L(tab):	JMPENT(	L(f0), L(tab))
-	JMPENT(	L(f1), L(tab))
-	JMPENT(	L(f2), L(tab))
-	JMPENT(	L(f3), L(tab))
-	JMPENT(	L(f4), L(tab))
-	JMPENT(	L(f5), L(tab))
-	JMPENT(	L(f6), L(tab))
-	JMPENT(	L(f7), L(tab))
-	TEXT
 
-L(f0):	mulx(	(up), %r10, %r8)
-	lea	-8(up), up
+	test	$1, R8(%rax)
+	jne	L(xx1)
+
+L(xx0):	mulx(	(up), %r10, %r8)
+	test	$2, R8(%rax)
+	jne	L(x10)
+L(x00):	test	$4, R8(%rax)
+	je	L(f0)
+L(f4):	lea	24(up), up
+	lea	-40(rp), rp
+	jmp	L(b4)
+
+L(xx1):	mulx(	(up), %r9, %r11)
+	test	$2, R8(%rax)
+	jne	L(x11)
+L(x01):	test	$4, R8(%rax)
+	jne	L(f5)
+L(f1):	jrcxz	L(1)
+	jmp	L(b1)
+L(1):	add	(rp), %r9
+	mov	%r9, (rp)
+	adc	%rcx, %r11		C relies on rcx = 0
+	mov	%r11, %rax
+	FUNC_EXIT()
+	ret
+
+L(f0):	lea	-8(up), up
 	lea	-8(rp), rp
 	lea	-1(n), n
 	jmp	L(b0)
 
-L(f3):	mulx(	(up), %r9, %rax)
-	lea	16(up), up
+L(f7):	lea	-16(up), up
+	lea	-16(rp), rp
+	jmp	L(b7)
+
+L(x11):	test	$4, R8(%rax)
+	jne	L(f7)
+L(f3):	lea	16(up), up
 	lea	-48(rp), rp
 	jmp	L(b3)
 
-L(f4):	mulx(	(up), %r10, %r8)
-	lea	24(up), up
-	lea	-40(rp), rp
-	jmp	L(b4)
-
-L(f5):	mulx(	(up), %r9, %rax)
-	lea	32(up), up
+L(f5):	lea	32(up), up
 	lea	-32(rp), rp
 	jmp	L(b5)
 
-L(f6):	mulx(	(up), %r10, %r8)
-	lea	40(up), up
+L(end):	adox(	(rp), %r9)
+	mov	%r9, (rp)
+	adox(	%rcx, %r11)		C relies on rcx = 0
+	adc	%rcx, %r11		C relies on rcx = 0
+	mov	%r11, %rax
+	FUNC_EXIT()
+	ret
+
+L(f6):	lea	40(up), up
 	lea	-24(rp), rp
 	jmp	L(b6)
 
-L(f1):	mulx(	(up), %r9, %rax)
-	jrcxz	L(1)
-	jmp	L(b1)
-L(1):	add	(rp), %r9
-	mov	%r9, (rp)
-	adc	%rcx, %rax		C relies on rcx = 0
-	FUNC_EXIT()
-	ret
+L(x10):	test	$4, R8(%rax)
+	jne	L(f6)
 
-L(end):	adox(	(rp), %r9)
-	mov	%r9, (rp)
-	adox(	%rcx, %rax)		C relies on rcx = 0
-	adc	%rcx, %rax		C relies on rcx = 0
-	FUNC_EXIT()
-	ret
-
-ifdef(`PIC',
-`	nop;nop;nop;nop',
-`	nop;nop;nop;nop;nop;nop;nop;nop;nop;nop;nop')
-
-L(f2):	mulx(	(up), %r10, %r8)
-	lea	8(up), up
+L(f2):	lea	8(up), up
 	lea	8(rp), rp
-	mulx(	(up), %r9, %rax)
+	mulx(	(up), %r9, %r11)
 
 	ALIGN(32)
 L(top):	adox(	-8,(rp), %r10)
@@ -172,25 +159,25 @@ L(b1):	mulx(	8,(up), %r10, %r8)
 	adox(	(rp), %r9)
 	lea	-1(n), n
 	mov	%r9, (rp)
-	adcx(	%rax, %r10)
-L(b0):	mulx(	16,(up), %r9, %rax)
+	adcx(	%r11, %r10)
+L(b0):	mulx(	16,(up), %r9, %r11)
 	adcx(	%r8, %r9)
 	adox(	8,(rp), %r10)
 	mov	%r10, 8(rp)
 L(b7):	mulx(	24,(up), %r10, %r8)
 	lea	64(up), up
-	adcx(	%rax, %r10)
+	adcx(	%r11, %r10)
 	adox(	16,(rp), %r9)
 	mov	%r9, 16(rp)
-L(b6):	mulx(	-32,(up), %r9, %rax)
+L(b6):	mulx(	-32,(up), %r9, %r11)
 	adox(	24,(rp), %r10)
 	adcx(	%r8, %r9)
 	mov	%r10, 24(rp)
 L(b5):	mulx(	-24,(up), %r10, %r8)
-	adcx(	%rax, %r10)
+	adcx(	%r11, %r10)
 	adox(	32,(rp), %r9)
 	mov	%r9, 32(rp)
-L(b4):	mulx(	-16,(up), %r9, %rax)
+L(b4):	mulx(	-16,(up), %r9, %r11)
 	adox(	40,(rp), %r10)
 	adcx(	%r8, %r9)
 	mov	%r10, 40(rp)
@@ -198,13 +185,8 @@ L(b3):	adox(	48,(rp), %r9)
 	mulx(	-8,(up), %r10, %r8)
 	mov	%r9, 48(rp)
 	lea	64(rp), rp
-	adcx(	%rax, %r10)
-	mulx(	(up), %r9, %rax)
+	adcx(	%r11, %r10)
+	mulx(	(up), %r9, %r11)
 	jmp	L(top)
-
-L(f7):	mulx(	(up), %r9, %rax)
-	lea	-16(up), up
-	lea	-16(rp), rp
-	jmp	L(b7)
 EPILOGUE()
 ASM_END()
