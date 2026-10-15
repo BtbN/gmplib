@@ -1,3 +1,8 @@
+2026-10-15  Niels Möller  <nisse@lysator.liu.se>
+
+	* tests/t-str.c (testmain): Check that mpz_sizeinbase gives exact
+	result when base is a power of two.
+
 2026-10-08  Niels Möller  <nisse@lysator.liu.se>
 
 	From Pádraig Brady:
