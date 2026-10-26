@@ -1,3 +1,8 @@
+2026-10-26  Jeff Bailey  <jbailey@raspberryginger.com>
+
+	* gmp-h.in (_GMP_H_HAVE_FILE): Test also _LLVM_LIBC_STDIO_H (for
+	LLVM libc).
+
 2026-09-20  Torbjörn Granlund  <tg@gmplib.org>
 
 	* mpn/x86_64/coreibwl/addmul_1.asm: Rewrite feed-in code.
