@@ -1,3 +1,9 @@
+2026-11-01  Marc Glisse <marc.glisse@inria.fr>
+
+	* gmpxx.h (__gmp_binary_divides, __gmp_binary_modulus): Fix LONG_MIN /
+	mpz_class(-1).
+	* tests/cxx/t-ops2z.cc: Test it.
+
 2026-10-26  Jeff Bailey  <jbailey@raspberryginger.com>
 
 	* gmp-h.in (_GMP_H_HAVE_FILE): Test also _LLVM_LIBC_STDIO_H (for

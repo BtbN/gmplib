@@ -671,7 +671,17 @@ struct __gmp_binary_divides
   static void eval(mpz_ptr z, signed long int l, mpz_srcptr w)
   {
     if (mpz_fits_slong_p(w))
-      mpz_set_si(z, l / mpz_get_si(w));
+      {
+	signed long divisor = mpz_get_si(w);
+	// LONG_MIN / -1 is not representable as a signed long.
+	if (divisor == -1)
+	  {
+	    mpz_set_si(z, l);
+	    mpz_neg(z, z);
+	  }
+	else
+	  mpz_set_si(z, l / divisor);
+      }
     else
       {
         /* if w is bigger than a long then the quotient must be zero, unless
@@ -825,7 +835,11 @@ struct __gmp_binary_modulus
   static void eval(mpz_ptr z, signed long int l, mpz_srcptr w)
   {
     if (mpz_fits_slong_p(w))
-      mpz_set_si(z, l % mpz_get_si(w));
+      {
+	signed long divisor = mpz_get_si(w);
+	// LONG_MIN % -1 is undefined in C++ even though the result is zero.
+	mpz_set_si(z, divisor == -1 ? 0 : l % divisor);
+      }
     else
       {
         /* if w is bigger than a long then the remainder is l unchanged,

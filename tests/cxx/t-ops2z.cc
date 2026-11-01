@@ -36,6 +36,8 @@ void checkz (){
   CHECK_ALL_SIGNS(mpz_class,17,2,%);
   CHECK(unsigned long,mpz_class,5,-2,/);
   CHECK(unsigned long,mpz_class,5,-2,%);
+  ASSERT_ALWAYS(LONG_MIN/mpz_class(-1)+LONG_MIN==0);
+  ASSERT_ALWAYS(LONG_MIN%mpz_class(-1)==0);
   ASSERT_ALWAYS(7ul/mpz_class(1e35)==0);
   ASSERT_ALWAYS(7ul%mpz_class(1e35)==7);
   ASSERT_ALWAYS(7ul/mpz_class(-1e35)==0);
